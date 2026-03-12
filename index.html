@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uyir Kaavalan | Visual Health</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #FF2A7A;
+            --primary-dark: #D81B60;
+            --secondary: #FF75A3;
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-main: #2D3748;
+            --text-muted: #718096;
+            --success: #38A169;
+            --warning: #DD6B20;
+            --danger: #E53E3E;
+            --glass: rgba(255, 255, 255, 0.9);
+        }
+
+        body { font-family: 'Outfit', sans-serif; margin: 0; padding: 0; background-color: #E2E8F0; color: var(--text-main); display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 420px; height: 100vh; background: var(--bg-color); position: relative; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; }
+        .screen { display: none; padding: 24px 24px 100px 24px; height: 100%; overflow-y: auto; box-sizing: border-box; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .screen.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        h1, h2, h3 { color: var(--text-main); margin-bottom: 8px; font-weight: 700; }
+        p { color: var(--text-muted); font-size: 15px; margin-top: 0; line-height: 1.5; }
+        *:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+        .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px; margin: 12px 0; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border: none; border-radius: 16px; font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 10px 20px rgba(255, 42, 122, 0.2); transition: all 0.2s ease; }
+        .btn:active { transform: scale(0.97); }
+        .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); box-shadow: none; }
+        .btn-google { background: white; color: var(--text-main); border: 1px solid #E2E8F0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-danger { background: linear-gradient(135deg, #E53E3E, #FC8181); box-shadow: 0 10px 20px rgba(229, 62, 62, 0.2); }
+
+        input, select { width: 100%; padding: 16px; margin: 10px 0; border: 2px solid transparent; border-radius: 16px; background: white; box-shadow: 0 4px 6px rgba(0,0,0,0.02); font-family: 'Outfit', sans-serif; font-size: 15px; color: var(--text-main); box-sizing: border-box; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--primary); background: #FFF5F7; outline: none; }
+
+        .bento-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+        .bento-card { background: var(--card-bg); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid rgba(255,255,255,0.8); transition: all 0.2s; }
+        .bento-card:active { transform: scale(0.95); }
+        .bento-large { grid-column: span 2; flex-direction: row; align-items: center; background: linear-gradient(135deg, #FF2A7A, #FF75A3); color: white; }
+        .bento-large h3, .bento-large p { color: white; }
+
+        .icon-box { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 12px; }
+        .icon-blue { background: #EBF8FF; color: #3182CE; }
+        .icon-green { background: #F0FFF4; color: #38A169; }
+        .icon-orange { background: #FFFAF0; color: #DD6B20; }
+        .icon-red { background: #FFF5F5; color: #E53E3E; }
+        .icon-purple { background: #FAF5FF; color: #805AD5; }
+
+        /* Symptom Chips & Categories */
+        .chip-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .symp-category-title { width: 100%; font-size: 14px; font-weight: 700; color: var(--primary); margin: 15px 0 5px 0; border-bottom: 1px solid #E2E8F0; padding-bottom: 5px; }
+        .symptom-chip { padding: 8px 16px; border-radius: 20px; background: white; border: 1px solid #CBD5E0; color: var(--text-muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .symptom-chip.selected { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(255,42,122,0.3); }
+
+        .risk-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); display: none; margin-top: 20px; animation: slideUp 0.4s ease; border-top: 5px solid var(--primary); }
+        .risk-bar-bg { width: 100%; height: 10px; background: #E2E8F0; border-radius: 5px; margin-top: 10px; overflow: hidden; }
+        .risk-bar-fill { height: 100%; width: 0%; background: var(--primary); transition: width 1s ease-in-out; }
+
+        .bottom-nav { position: absolute; bottom: 20px; left: 20px; right: 20px; background: var(--glass); backdrop-filter: blur(12px); border-radius: 24px; padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.4); z-index: 10; }
+        .nav-item { color: var(--text-muted); font-size: 20px; cursor: pointer; padding: 12px; border-radius: 16px; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 600; display: none; }
+        .nav-item.active { background: #FFF5F7; color: var(--primary); }
+        .nav-item.active span { display: block; }
+
+        .chat-container { height: 65%; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+        .bubble { padding: 14px 18px; border-radius: 20px; max-width: 80%; font-size: 15px; line-height: 1.4; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .bubble-ai { background: white; border-bottom-left-radius: 4px; align-self: flex-start; }
+        .bubble-user { background: var(--primary); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+        .chat-input-wrapper { display: flex; gap: 10px; margin-top: 15px; align-items: center; }
+        .chat-input-wrapper input { margin: 0; flex: 1; border-radius: 24px; }
+        .icon-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: white; border: none; font-size: 18px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(255,42,122,0.3); transition: transform 0.2s; }
+        .icon-btn:active { transform: scale(0.9); }
+
+        @keyframes pulseRec { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(229, 62, 62, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(229, 62, 62, 0); } }
+        .recording { background: var(--danger) !important; animation: pulseRec 1.5s infinite !important; }
+        .typing-anim { font-weight: bold; color: var(--primary); animation: blink 1s infinite alternate; }
+        @keyframes blink { 0% { opacity: 0.3; } 100% { opacity: 1; } }
+
+        .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .lang-selector { padding: 8px 12px; border-radius: 20px; border: 1px solid #E2E8F0; background: white; font-family: 'Outfit'; font-weight: 600; outline: none; width: auto; margin:0; cursor: pointer;}
+        
+        .med-card { background: white; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border-left: 4px solid var(--primary); margin-bottom: 10px; }
+        
+        .radar-box { width: 150px; height: 150px; border-radius: 50%; background: rgba(229, 62, 62, 0.1); margin: 30px auto; position: relative; display: flex; align-items: center; justify-content: center; border: 2px solid rgba(229, 62, 62, 0.3); }
+        .radar-box::before { content: ''; position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--danger); animation: pulseRec 2s infinite; }
+        .insurance-list { margin-top: 15px; padding-left: 20px; font-size: 13px; color: var(--text-muted); }
+        .insurance-list li { margin-bottom: 5px; color: #2C5282; font-weight: 600; }
+        
+        .input-row { display: flex; gap: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <div id="splash" class="screen active" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div style="font-size: 60px; color: var(--primary); margin-bottom: 15px;"><i class="fa-solid fa-heart-pulse"></i></div>
+        <h2 style="font-size: 28px; margin: 0;">Uyir Kaavalan</h2>
+        <p style="color: var(--primary);">உயிர் காவலன்</p>
+    </div>
+
+    <div id="auth" class="screen">
+        <div style="position: absolute; top: 20px; right: 20px;">
+            <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+            </select>
+        </div>
+        <div style="text-align: center; margin-bottom: 20px; margin-top: 30px;">
+            <i class="fa-solid fa-shield-halved" style="font-size: 40px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h2 data-i18n="secure_login" style="margin-bottom: 5px;">Profile Setup</h2>
+            <p data-i18n="login_desc" style="font-size: 13px;">Create your AI health profile.</p>
+        </div>
+
+        <input type="text" id="authName" placeholder="Full Name" data-i18n-placeholder="pl_name">
+        
+        <div class="input-row">
+            <input type="number" id="authAge" placeholder="Age" data-i18n-placeholder="pl_age">
+            <select id="authGender">
+                <option value="" data-i18n="pl_gender">Gender</option>
+                <option value="Male" data-i18n="opt_male">Male</option>
+                <option value="Female" data-i18n="opt_female">Female</option>
+                <option value="Other" data-i18n="opt_other">Other</option>
+            </select>
+        </div>
+
+        <div class="input-row">
+            <input type="number" id="authWeight" placeholder="Weight (kg)" data-i18n-placeholder="pl_weight">
+            <input type="number" id="authHeight" placeholder="Height (cm)" data-i18n-placeholder="pl_height">
+        </div>
+        
+        <select id="authBlood" style="margin-bottom: 15px;">
+            <option value="" data-i18n="pl_blood">Blood Group</option>
+            <option value="A+">A+</option><option value="A-">A-</option>
+            <option value="B+">B+</option><option value="B-">B-</option>
+            <option value="O+">O+</option><option value="O-">O-</option>
+            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+        </select>
+        
+        <button class="btn" onclick="handleLogin()"><i class="fa-solid fa-right-to-bracket"></i> <span data-i18n="sign_in">Save & Continue</span></button>
+    </div>
+
+    <div id="dashboard" class="screen">
+        <div class="top-header">
+            <div>
+                <h2 style="margin-bottom: 2px;" id="welcomeName">Hello 👋</h2>
+                <p data-i18n="how_feeling" style="margin-bottom: 5px;">How are you feeling today?</p>
+                <span id="dashBioBadge" style="font-size: 11px; background: #E2E8F0; padding: 3px 8px; border-radius: 10px; color: var(--text-main); font-weight: bold;">Profile not set</span>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+                <div style="width:40px; height:40px; border-radius:50%; background:white; display:flex; justify-content:center; align-items:center; color:var(--primary); box-shadow:0 2px 5px rgba(0,0,0,0.05); cursor:pointer;" onclick="nextScreen('family')">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bento-grid">
+            <div class="bento-card bento-large" onclick="nextScreen('doctor')">
+                <div>
+                    <h3 data-i18n="ai_doc">AI Doctor Chat</h3>
+                    <p style="margin: 0;" data-i18n="ai_desc">Type or speak your symptoms</p>
+                </div>
+                <div style="font-size: 45px;"><i class="fa-solid fa-user-doctor"></i></div>
+            </div>
+
+            <div class="bento-card" onclick="nextScreen('selector')" style="background: #EBF8FF; border-color: #BEE3F8;">
+                <div class="icon-box" style="background: #3182CE; color: white;"><i class="fa-solid fa-list-check"></i></div>
+                <h3 style="font-size: 16px; margin:0; color: #2C5282;" data-i18n="select_symp">Select Symptoms</h3>
+                <p style="font-size: 12px; margin-top: 5px; color: #4299E1;" data-i18n="quick_check">Quick disease check</p>
+            </div>
+
+            <div class="bento-card" onclick="nextScreen('hospitals');">
+                <div class="icon-box icon-green"><i class="fa-solid fa-location-dot"></i></div>
+                <h3 style="font-size: 16px; margin:0;" data-i18n="hospitals">Hospitals</h3>
+            </div>
+
+            <div class="bento-card" onclick="nextScreen('scan')">
+                <div class="icon-box icon-purple"><i class="fa-solid fa-file-waveform"></i></div>
+                <h3 style="font-size: 16px; margin:0;" data-i18n="scan">Scan Report</h3>
+            </div>
+            
+            <div class="bento-card" onclick="nextScreen('medicine')" style="background: #FFFAF0; border-color: #FEEBC8;">
+                <div class="icon-box icon-orange" style="background: var(--warning); color: white;"><i class="fa-solid fa-pills"></i></div>
+                <h3 style="font-size: 16px; margin:0; color: var(--warning);" data-i18n="nav_meds">Meds Reminder</h3>
+            </div>
+
+            <div class="bento-card bento-large" onclick="nextScreen('insurance')" style="background: linear-gradient(135deg, #3182CE, #63B3ED);">
+                <div>
+                    <h3 data-i18n="insurance_schemes">Insurance Schemes</h3>
+                    <p style="margin: 0; color: white;" data-i18n="insurance_desc">View available health coverage</p>
+                </div>
+                <div style="font-size: 45px;"><i class="fa-solid fa-shield-heart" style="color: white;"></i></div>
+            </div>
+
+            <div class="bento-card bento-large" style="background: linear-gradient(135deg, #E53E3E, #FC8181);" onclick="triggerSOS()">
+                <div>
+                    <h3 data-i18n="sos">Emergency SOS</h3>
+                    <p style="margin: 0;" data-i18n="sos_desc">Dispatch Ambulance</p>
+                </div>
+                <div style="font-size: 45px;"><i class="fa-solid fa-truck-medical"></i></div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i><span data-i18n="nav_home">Home</span></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i><span data-i18n="nav_consult">Consult</span></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i><span data-i18n="nav_check">Check</span></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i><span data-i18n="nav_meds">Meds</span></div>
+            <div class="nav-item" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i><span data-i18n="nav_map">Map</span></div>
+        </div>
+    </div>
+
+    <div id="insurance" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="insurance_schemes">Insurance Schemes</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        <p data-i18n="insurance_desc_full">Explore health insurance schemes to cover your medical expenses.</p>
+        <div id="fullInsuranceList" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+    <div id="family" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="family_title">Family Profiles</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        <p style="text-align: center; margin: 10px 0;"></p>
+        <p data-i18n="family_desc">Add family members to track their health and quick access during SOS.</p>
+
+        <div style="background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+            <input type="text" id="famName" placeholder="Name" aria-label="Name" data-i18n-placeholder="pl_name">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="famRel" placeholder="Relation" style="flex: 2;" data-i18n-placeholder="pl_rel">
+                <select id="famBG" style="flex: 1;">
+                    <option value="" data-i18n="pl_blood">Blood</option>
+                    <option value="A+">A+</option><option value="A-">A-</option>
+                    <option value="B+">B+</option><option value="B-">B-</option>
+                    <option value="O+">O+</option><option value="O-">O-</option>
+                    <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                </select>
+            </div>
+            <button class="btn" onclick="addFamily()"><i class="fa-solid fa-user-plus"></i> <span data-i18n="add_member">Add Member</span></button>
+        </div>
+
+        <h3 data-i18n="saved_members">Saved Members</h3>
+        <div id="familyList"></div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+    <div id="sos-tracking" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0; color: var(--danger);" data-i18n="sos_tracking_title">SOS Tracking</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="radar-box">
+            <i class="fa-solid fa-truck-medical" style="font-size: 40px; color: var(--danger);"></i>
+        </div>
+        <p style="text-align: center;"></p>
+        
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center; margin-top:20px;">
+            <h3 style="color: var(--danger); margin-top:0;" data-i18n="amb_dispatched">Ambulance Dispatched!</h3>
+            <h1 style="margin: 10px 0; font-size: 32px;" data-i18n="eta">ETA: 5 Mins</h1>
+            <p style="color: var(--text-main); font-weight:600; margin-bottom: 5px;">Vehicle: TN-30-AB-1234</p>
+            <p style="margin-bottom: 20px;">Driver: Raj Kumar (+91 98765 43210)</p>
+            
+            <button class="btn" style="background: var(--success); box-shadow: 0 10px 20px rgba(56, 161, 105, 0.2);" onclick="alertMsg('call_driver')"><i class="fa-solid fa-phone"></i> <span data-i18n="call_driver">Call Driver</span></button>
+            <button class="btn btn-danger" onclick="cancelSOS()"><i class="fa-solid fa-xmark"></i> <span data-i18n="cancel_sos">Cancel SOS</span></button>
+        </div>
+    </div>
+
+    <div id="scan" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="scan">Scan Report</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        <p data-i18n="scan_desc">Upload and manage your medical scan records securely.</p>
+
+        <div style="background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; text-align: center; border: 2px dashed #CBD5E0; cursor: pointer;" onclick="document.getElementById('fileUpload').click()">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size: 30px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h3 style="margin: 0; font-size: 16px;" data-i18n="upload_scan">Upload Scan Record</h3>
+            <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--text-muted);">PDF, JPG, PNG (Max 5MB)</p>
+            <input type="file" id="fileUpload" style="display: none;" onchange="addScan(this)">
+        </div>
+
+        <h3 data-i18n="past_scans">Past Records</h3>
+        <div id="scanList"></div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+    <div id="medicine" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="nav_meds">Meds Reminder</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        
+        <p data-i18n="med_desc">Never miss your medication. Add your schedule below.</p>
+
+        <div style="background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+            <input type="text" id="medName" placeholder="Medicine Name" data-i18n-placeholder="pl_med">
+            <div style="display: flex; gap: 10px;">
+                <input type="time" id="medTime" style="flex: 1;">
+                <select id="medFreq" style="flex: 1;">
+                    <option value="Daily" data-i18n="freq_daily">Daily</option>
+                    <option value="Weekly" data-i18n="freq_weekly">Weekly</option>
+                    <option value="As Needed" data-i18n="freq_needed">As Needed</option>
+                </select>
+            </div>
+            <button class="btn" onclick="addMedicine()"><i class="fa-solid fa-plus"></i> <span data-i18n="add_med">Add Medicine</span></button>
+        </div>
+
+        <h3 data-i18n="your_meds">Your Schedule</h3>
+        <div id="medList"></div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item active" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+    <div id="selector" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="select_symp">Select Symptoms</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        <p data-i18n="select_desc">Tap all the symptoms you are currently experiencing to calculate risk.</p>
+
+        <div class="chip-container" id="symptomChips">
+            <div class="symp-category-title" data-i18n="cat_general">General & Systemic</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="fever" data-i18n="symp_fever">Fever</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="chills" data-i18n="symp_chills">Chills</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="fatigue" data-i18n="symp_fatigue">Fatigue</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="dizziness" data-i18n="symp_dizziness">Dizziness</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="sweating" data-i18n="symp_sweating">Sweating</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="weight_loss" data-i18n="symp_weight_loss">Weight Loss</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="weakness" data-i18n="symp_weakness">Weakness</div>
+
+            <div class="symp-category-title" data-i18n="cat_respiratory">Head, Neck & Respiratory</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="headache" data-i18n="symp_headache">Headache</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="cough" data-i18n="symp_cough">Cough</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="sore_throat" data-i18n="symp_sore_throat">Sore Throat</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="runny_nose" data-i18n="symp_runny_nose">Runny Nose</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="breath" data-i18n="symp_breath">Shortness of Breath</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="wheezing" data-i18n="symp_wheezing">Wheezing</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="earache" data-i18n="symp_earache">Earache</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="vision" data-i18n="symp_vision">Vision Changes</div>
+
+            <div class="symp-category-title" data-i18n="cat_cardio">Chest & Cardiovascular</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="chest_pain" data-i18n="symp_chest">Chest Pain</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="palpitation" data-i18n="symp_palpitation">Palpitations</div>
+
+            <div class="symp-category-title" data-i18n="cat_digestive">Digestive & Abdomen</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="nausea" data-i18n="symp_nausea">Nausea/Vomiting</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="stomach_ache" data-i18n="symp_stomach_ache">Stomach Ache</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="diarrhea" data-i18n="symp_diarrhea">Diarrhea</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="constipation" data-i18n="symp_constipation">Constipation</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="appetite_loss" data-i18n="symp_appetite_loss">Loss of Appetite</div>
+
+            <div class="symp-category-title" data-i18n="cat_neuro">Muscles, Skin & Neurological</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="joint_pain" data-i18n="symp_joint_pain">Muscle/Joint Pain</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="rash" data-i18n="symp_rash">Skin Rash</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="swelling" data-i18n="symp_swelling">Swelling</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="numbness" data-i18n="symp_numbness">Numbness</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="confusion" data-i18n="symp_confusion">Confusion</div>
+            <div class="symptom-chip" onclick="toggleChip(this)" data-val="anxiety" data-i18n="symp_anxiety">Anxiety</div>
+        </div>
+
+        <button class="btn" onclick="analyzeSelectedSymptoms()"><i class="fa-solid fa-microchip"></i> <span data-i18n="analyze_risk">Analyze Risk</span></button>
+
+        <div id="riskResultCard" class="risk-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin:0;" data-i18n="risk_analysis">Risk Analysis</h3>
+                <span id="riskPercentage" style="font-size: 24px; font-weight: 700; color: var(--primary);">0%</span>
+            </div>
+            <div class="risk-bar-bg"><div class="risk-bar-fill" id="riskBar"></div></div>
+            
+            <div style="margin-top: 20px; background: #F8F9FA; padding: 15px; border-radius: 12px; border: 1px solid #E2E8F0;">
+                <p style="margin-bottom: 5px;"><strong><i class="fa-solid fa-virus"></i> <span data-i18n="predicted_disease">Predicted Disease:</span></strong> <span id="resDisease" style="color: var(--text-main);">None</span></p>
+                <p style="margin-bottom: 5px;"><strong><i class="fa-solid fa-triangle-exclamation"></i> <span data-i18n="risk_category">Risk Category:</span></strong> <span id="resCategory" style="font-weight: bold;">Safe</span></p>
+                <p style="margin-bottom: 5px;"><strong><i class="fa-solid fa-user-doctor"></i> <span data-i18n="suggested_doctor">Suggested Doctor:</span></strong> <span id="resDoctor" style="color: var(--primary); font-weight: 600;">General Physician</span></p>
+                <p style="margin-bottom: 5px;"><strong><i class="fa-solid fa-kit-medical"></i> <span data-i18n="first_aid">First-Aid & Precautions:</span></strong> <span id="resPrecautions" style="color: var(--text-main);">None</span></p>
+                <p style="margin-bottom: 0;"><strong><i class="fa-solid fa-indian-rupee-sign"></i> <span data-i18n="est_cost">Est. Treatment Cost:</span></strong> <span id="resCost" style="color: var(--warning); font-weight: 600;">₹0</span></p>
+                
+                <div id="insuranceContainer" style="display:none; margin-top: 15px; border-top: 1px dashed #CBD5E0; padding-top: 10px;">
+                    <strong style="color: var(--primary); font-size: 13px;" data-i18n="insurance_title">Recommended Insurance Schemes:</strong>
+                    <ul class="insurance-list" id="insuranceList"></ul>
+                </div>
+            </div>
+
+            <button class="btn btn-outline" style="margin-top: 15px; border-radius: 12px; padding: 12px;" onclick="nextScreen('hospitals');"><i class="fa-solid fa-hospital"></i> <span data-i18n="find_dr_hospital">Find Nearby Doctor</span></button>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item active" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item" onclick="nextScreen('hospitals');"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+    <div id="doctor" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="ai_assist">AI Chat</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="chat-container" id="chatHistory">
+            <div class="bubble bubble-ai">
+                <i class="fa-solid fa-robot" style="color: var(--primary); margin-bottom: 5px;"></i><br>
+                <span id="chatWelcomeTxt" data-i18n="chat_welcome">Hello! I am your AI Doctor. Please describe your symptoms. You can type or use the voice recorder. I'm here to help! 🩺</span>
+            </div>
+        </div>
+
+        <div class="chat-input-wrapper">
+            <button class="icon-btn" id="micBtn" onclick="startVoiceRecording()"><i class="fa-solid fa-microphone"></i></button>
+            <input type="text" id="chatInput" placeholder="Type symptoms..." data-i18n-placeholder="pl_chat">
+            <button class="icon-btn" style="background: var(--text-main);" onclick="sendMessage(false)">
+                <i class="fa-solid fa-paper-plane"></i>
+            </button>
+        </div>
+
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item active" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+    <div id="hospitals" class="screen">
+        <div class="top-header">
+            <i class="fa-solid fa-arrow-left" style="font-size: 20px; cursor: pointer;" onclick="nextScreen('dashboard')"></i>
+            <div style="display:flex; align-items:center; gap:10px;">
+                <h2 style="margin: 0;" data-i18n="nearby_hosp">Nearby Hospitals</h2>
+                <select class="lang-selector" onchange="changeLanguage(this.value)" aria-label="Select Language" style="padding: 4px 8px; font-size:12px;">
+                    <option value="en">EN</option><option value="ta">TA</option><option value="hi">HI</option>
+                    <option value="te">TE</option><option value="ml">ML</option><option value="kn">KN</option>
+                </select>
+            </div>
+        </div>
+        <button class="btn" style="background: var(--text-main);"><i class="fa-solid fa-location-crosshairs"></i> <span data-i18n="detect_loc">Detect My Location</span></button>
+        <div style="margin-bottom: 20px; text-align: center;">
+            <p data-i18n="hospital_desc" style="font-size: 14px; margin-bottom: 15px;">Find nearby hospitals, clinics, pharmacies, and emergency services.</p>
+            <a href="https://www.google.com/maps/search/?api=1&query=my+location" target="_blank" style="color: var(--primary); font-weight: bold; display:block; margin-bottom:10px;" data-i18n="view_map">View My Location</a>
+            <a href="https://www.google.com/maps/search/hospitals+near+me" target="_blank" style="color: var(--success); font-weight: bold;" data-i18n="search_all">Search All Hospitals & Clinics</a>
+        </div>
+        <div class="bottom-nav">
+            <div class="nav-item" onclick="nextScreen('dashboard')"><i class="fa-solid fa-house"></i></div>
+            <div class="nav-item" onclick="nextScreen('doctor')"><i class="fa-solid fa-stethoscope"></i></div>
+            <div class="nav-item" onclick="nextScreen('selector')"><i class="fa-solid fa-list-check"></i></div>
+            <div class="nav-item" onclick="nextScreen('medicine')"><i class="fa-solid fa-clock"></i></div>
+            <div class="nav-item active" onclick="nextScreen('hospitals')"><i class="fa-solid fa-map-location-dot"></i></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentLanguage = 'en';
+    let userBio = { name: '', age: '', gender: '', weight: '', height: '', blood: '' };
+
+    function nextScreen(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+        const activeNavs = document.querySelectorAll(`.nav-item[onclick*="nextScreen('${id}')"]`);
+        if(activeNavs.length > 0) activeNavs.forEach(nav => nav.classList.add('active'));
+    }
+
+    setTimeout(() => { if(document.getElementById('splash').classList.contains('active')) nextScreen('auth'); }, 2000);
+
+    function handleLogin() {
+        userBio.name = document.getElementById('authName').value || 'User';
+        userBio.age = document.getElementById('authAge').value;
+        userBio.gender = document.getElementById('authGender').value;
+        userBio.weight = document.getElementById('authWeight').value;
+        userBio.height = document.getElementById('authHeight').value;
+        userBio.blood = document.getElementById('authBlood').value;
+
+        // Update Dashboard info
+        const helloTxt = translations[currentLanguage].welcome.split(" ")[0]; // Get "Hello" part
+        document.getElementById('welcomeName').innerText = `${helloTxt} ${userBio.name} 👋`;
+        
+        let bioStr = [];
+        if(userBio.age) bioStr.push(`${userBio.age}Y`);
+        if(userBio.blood) bioStr.push(userBio.blood);
+        if(userBio.weight) bioStr.push(`${userBio.weight}kg`);
+        
+        const badge = document.getElementById('dashBioBadge');
+        if (bioStr.length > 0) {
+            badge.innerText = bioStr.join(" | ");
+        } else {
+            badge.style.display = 'none';
+        }
+
+        // Setup AI Welcome Message with name
+        document.getElementById('chatWelcomeTxt').innerText = translations[currentLanguage].chat_welcome.replace("{name}", userBio.name);
+
+        nextScreen('dashboard');
+    }
+
+
+    function triggerSOS() { nextScreen('sos-tracking'); }
+    function cancelSOS() { alertMsg('alert_sos_cancel'); nextScreen('dashboard'); }
+    function toggleChip(element) { element.classList.toggle('selected'); }
+
+    function alertMsg(key) {
+        alert(translations[currentLanguage][key] || translations['en'][key]);
+    }
+
+    const allSchemes = [
+        "CM's Comprehensive Health Insurance (TN) - Upto ₹5 Lakhs",
+        "Ayushman Bharat (PM-JAY) - Upto ₹5 Lakhs",
+        "Star Family Health Optima",
+        "HDFC ERGO Optima Restore",
+        "Care Advantage Health Insurance",
+        "Niva Bupa Health Companion",
+        "SBI General Arogya Supreme",
+        "ICICI Lombard Complete Health",
+        "Aditya Birla Activ Health Essential",
+        "LIC Arogya Rakshak"
+    ];
+
+    function analyzeSelectedSymptoms() {
+        const selectedChips = document.querySelectorAll('.symptom-chip.selected');
+        const resultCard = document.getElementById('riskResultCard');
+        const riskBar = document.getElementById('riskBar');
+        let symptoms = Array.from(selectedChips).map(chip => chip.getAttribute('data-val'));
+        
+        if (symptoms.length === 0) { alertMsg("alert_select_symp"); return; }
+        
+        let riskScore = 15 + (symptoms.length * 8);
+        let disease = "Mild Viral Infection / Common Cold";
+        let category = "Low Risk";
+        let doctor = "General Physician";
+        let color = "var(--success)";
+        let estCost = "₹300 - ₹500";
+        let firstAid = "Rest, drink warm fluids, and take Paracetamol if temperature exceeds 101°F.";
+        let showInsurance = false;
+        let schemeCount = 0;
+
+        if (symptoms.includes('chest_pain') || symptoms.includes('breath') || symptoms.includes('palpitation') || (symptoms.includes('numbness') && symptoms.includes('confusion'))) {
+            riskScore = Math.max(riskScore, 85);
+            disease = "Possible Cardiac Issue / Severe Respiratory";
+            category = "CRITICAL (Seek Emergency Help)";
+            doctor = "Cardiologist / Emergency Medicine";
+            color = "var(--danger)";
+            estCost = "₹10,000+";
+            firstAid = "Do NOT wait. Have someone stay with you, sit down to rest, and call an ambulance immediately.";
+            showInsurance = true;
+            schemeCount = 10;
+        } 
+        else if (symptoms.includes('fever') && symptoms.includes('joint_pain') && (symptoms.includes('rash') || symptoms.includes('headache'))) {
+            riskScore = Math.max(riskScore, 65);
+            disease = "Possible Dengue / Chikungunya / Viral Fever";
+            category = "Moderate Risk (Needs Blood Test)";
+            doctor = "General Physician / Infectious Disease";
+            color = "var(--warning)";
+            estCost = "₹1,500 - ₹3,500";
+            firstAid = "Stay hydrated. Avoid self-medicating with Aspirin or Ibuprofen. Use mosquito repellents and rest.";
+            showInsurance = true;
+            schemeCount = 5;
+        }
+        else if (symptoms.includes('stomach_ache') && (symptoms.includes('diarrhea') || symptoms.includes('nausea'))) {
+            riskScore = Math.max(riskScore, 45);
+            disease = "Food Poisoning / Gastroenteritis";
+            category = "Moderate Risk (Stay Hydrated)";
+            doctor = "Gastroenterologist / Gen Physician";
+            color = "var(--warning)";
+            estCost = "₹800 - ₹1,500";
+            firstAid = "Drink plenty of ORS to prevent dehydration. Avoid spicy, heavy, or dairy foods.";
+            showInsurance = true;
+            schemeCount = 3;
+        }
+        else if (symptoms.includes('cough') && symptoms.includes('sore_throat') && symptoms.includes('runny_nose')) {
+            riskScore = Math.max(riskScore, 30);
+            disease = "Upper Respiratory Tract Infection / Flu";
+            category = "Low-Moderate Risk";
+            doctor = "ENT Specialist / Gen Physician";
+            color = "var(--success)";
+            estCost = "₹500 - ₹800";
+            firstAid = "Gargle with warm salt water, use steam inhalation, and get plenty of rest.";
+            showInsurance = false;
+        }
+
+        if(riskScore > 98) riskScore = 98; 
+
+        if (riskScore >= 80) {
+            alert(translations[currentLanguage].alert_emergency || translations['en'].alert_emergency);
+        }
+
+        resultCard.style.display = 'block';
+
+        setTimeout(() => {
+            document.getElementById('riskPercentage').innerText = riskScore + "%";
+            document.getElementById('riskPercentage').style.color = color;
+            riskBar.style.width = riskScore + "%";
+            riskBar.style.backgroundColor = color;
+            document.getElementById('riskResultCard').style.borderTopColor = color;
+            document.getElementById('resDisease').innerText = disease;
+            document.getElementById('resCategory').innerText = category;
+            document.getElementById('resCategory').style.color = color;
+            document.getElementById('resDoctor').innerText = doctor;
+            document.getElementById('resPrecautions').innerText = firstAid;
+            document.getElementById('resCost').innerText = estCost;
+
+            const insContainer = document.getElementById('insuranceContainer');
+            const insList = document.getElementById('insuranceList');
+            if (showInsurance) {
+                insContainer.style.display = "block";
+                insList.innerHTML = "";
+                for(let i=0; i<schemeCount; i++) {
+                    insList.innerHTML += `<li>${allSchemes[i]}</li>`;
+                }
+            } else {
+                insContainer.style.display = "none";
+            }
+
+        }, 100);
+    }
+
+    // --- Family Profile Logic ---
+    let familyProfiles = [];
+
+    function addFamily() {
+        const name = document.getElementById('famName').value;
+        const rel = document.getElementById('famRel').value;
+        const bg = document.getElementById('famBG').value;
+
+        if(!name || !rel) { alertMsg("alert_fill_details"); return; }
+        familyProfiles.push({ name, rel, bg });
+        renderFamily();
+        
+        document.getElementById('famName').value = '';
+        document.getElementById('famRel').value = '';
+        document.getElementById('famBG').value = '';
+    }
+
+    function renderFamily() {
+        const list = document.getElementById('familyList');
+        list.innerHTML = '';
+        if(familyProfiles.length === 0) {
+            list.innerHTML = `<p style="text-align:center; color:var(--text-muted);" data-i18n="no_family">${translations[currentLanguage].no_family}</p>`;
+            return;
+        }
+        familyProfiles.forEach((fam, index) => {
+            const bloodTxt = translations[currentLanguage].pl_blood || "Blood";
+            list.innerHTML += `
+                <div class="med-card" style="border-left-color: #3182CE;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 16px; color: var(--text-main);">${fam.name}</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 13px; font-weight: 600; color: #3182CE;">
+                            ${fam.rel} ${fam.bg ? `| ${bloodTxt}: ${fam.bg}` : ''}
+                        </p>
+                    </div>
+                    <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; padding: 10px; font-size: 18px;" onclick="deleteFamily(${index})"></i>
+                </div>
+            `;
+        });
+    }
+
+    function deleteFamily(index) {
+        familyProfiles.splice(index, 1);
+        renderFamily();
+    }
+
+    function renderInsurance() {
+        const list = document.getElementById('fullInsuranceList');
+        list.innerHTML = '';
+        const schemeTxt = translations[currentLanguage].active_scheme || "Active Scheme";
+        allSchemes.forEach(scheme => {
+            list.innerHTML += `
+                <div class="med-card" style="border-left-color: #38A169;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 15px; color: var(--text-main);">${scheme}</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; color: var(--success);"><i class="fa-solid fa-check-circle"></i> ${schemeTxt}</p>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // --- Scan Records Logic ---
+    let scanRecords = [
+        { name: "Chest X-Ray.pdf", date: "12 Oct 2023" },
+        { name: "Blood Test Report.png", date: "05 Nov 2023" }
+    ];
+
+    function renderScans() {
+        const list = document.getElementById('scanList');
+        list.innerHTML = '';
+        const explainTxt = translations[currentLanguage].ai_explain || "AI Explain";
+        scanRecords.forEach((scan) => {
+            list.innerHTML += `
+                <div class="med-card" style="border-left-color: #805AD5;">
+                    <div style="display:flex; align-items:center; gap: 15px;">
+                        <div class="icon-box" style="background: #FAF5FF; color: #805AD5; width:40px; height:40px; margin:0;"><i class="fa-solid fa-file-medical"></i></div>
+                        <div>
+                            <h4 style="margin: 0; font-size: 15px; color: var(--text-main);">${scan.name}</h4>
+                            <p style="margin: 3px 0 0 0; font-size: 12px; color: var(--text-muted);">${scan.date}</p>
+                            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px; margin-top:5px; border-radius: 8px;" onclick="explainScan('${scan.name}')"><i class="fa-solid fa-wand-magic-sparkles"></i> <span>${explainTxt}</span></button>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-download" style="color: var(--primary); cursor: pointer; padding: 10px;"></i>
+                </div>
+            `;
+        });
+    }
+
+    function addScan(input) {
+        if(input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            const date = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            scanRecords.unshift({ name: fileName, date: date });
+            renderScans();
+            alertMsg("alert_scan_upload");
+        }
+    }
+
+    function explainScan(name) {
+        alert((translations[currentLanguage].ai_explain_alert || translations['en'].ai_explain_alert) + "\n\n" + name);
+    }
+
+    // --- Medicine Reminder Logic ---
+    let medicines = [];
+    
+    function addMedicine() {
+        const name = document.getElementById('medName').value;
+        const time = document.getElementById('medTime').value;
+        const freq = document.getElementById('medFreq').value;
+        
+        if(!name || !time) { alertMsg("alert_med_details"); return; }
+        
+        medicines.push({ name, time, freq });
+        renderMedicines();
+        
+        document.getElementById('medName').value = '';
+        document.getElementById('medTime').value = '';
+    }
+
+    function renderMedicines() {
+        const list = document.getElementById('medList');
+        list.innerHTML = '';
+        
+        if(medicines.length === 0) {
+            list.innerHTML = `<p style="text-align: center; color: var(--text-muted); margin-top: 20px;" data-i18n="no_meds">${translations[currentLanguage].no_meds}</p>`;
+            return;
+        }
+        
+        medicines.forEach((med, index) => {
+            list.innerHTML += `
+                <div class="med-card">
+                    <div>
+                        <h4 style="margin: 0; font-size: 16px; color: var(--text-main);">${med.name}</h4>
+                        <p style="margin: 5px 0 0 0; font-size: 13px; font-weight: 600; color: var(--primary);">
+                            <i class="fa-regular fa-clock"></i> ${med.time}  |  ${med.freq}
+                        </p>
+                    </div>
+                    <i class="fa-solid fa-trash" style="color: var(--danger); cursor: pointer; padding: 10px; font-size: 18px;" onclick="deleteMed(${index})"></i>
+                </div>
+            `;
+        });
+    }
+
+    function deleteMed(index) {
+        medicines.splice(index, 1);
+        renderMedicines();
+    }
+
+    // --- Upgraded AI Doctor Chat Logic (Voice, Reply, Real-time Analysis) ---
+    const symptomKeywords = {
+        critical: ['chest', 'heart', 'breath', 'severe', 'emergency', 'நெஞ்சு', 'छाती', 'ఛాతీ', 'നെഞ്ച്', 'ಎದೆ'],
+        fever: ['fever', 'cold', 'cough', 'chill', 'temperature', 'காய்ச்சல்', 'बुखार', 'ജ്വരം', 'ಪನಿ', 'ಜ್ವರ', 'జ్వరం'],
+        stomach: ['stomach', 'nausea', 'vomit', 'diarrhea', 'belly', 'வயிறு', 'पेट', 'పొట్ట', 'కడుపు', 'വയറ്', 'ಹೊಟ್ಟೆ'],
+        headache: ['headache', 'head', 'dizzy', 'தலைவலி', 'सिरदर्द', 'തലവേദന', 'ತಲೆನೋವು', 'తలనొప్పి'],
+        injury: ['cut', 'blood', 'fall', 'bone', 'pain', 'காயம்', 'रक्त', 'ಗಾಯ', 'രക്തം']
+    };
+
+    function startVoiceRecording() {
+        const micBtn = document.getElementById('micBtn');
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        
+        if (!SpeechRecognition) {
+            alert("Voice recording is not supported in this browser.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        const langMap = { en: 'en-US', ta: 'ta-IN', hi: 'hi-IN', te: 'te-IN', ml: 'ml-IN', kn: 'kn-IN' };
+        
+        recognition.lang = langMap[currentLanguage];
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onstart = function() {
+            micBtn.classList.add('recording');
+        };
+
+        recognition.onresult = function(event) {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById('chatInput').value = transcript;
+        };
+
+        recognition.onspeechend = function() {
+            recognition.stop();
+        }
+
+        recognition.onend = function() {
+            micBtn.classList.remove('recording');
+        };
+
+        recognition.onerror = function(event) {
+            micBtn.classList.remove('recording');
+        }
+
+        recognition.start();
+    }
+
+    function sendQuickReply(btn) {
+        const replyText = btn.innerText;
+        btn.parentElement.style.display = 'none';
+        document.getElementById('chatInput').value = replyText;
+        sendMessage(true);
+    }
+
+    function generateAccurateAIResponse(messageText, lang) {
+        const lowerMsg = messageText.toLowerCase();
+        let matchedCat = 'unknown';
+
+        for (const cat in symptomKeywords) {
+            for (const word of symptomKeywords[cat]) {
+                if (lowerMsg.includes(word)) {
+                    matchedCat = cat;
+                    break;
+                }
+            }
+            if (matchedCat !== 'unknown') break;
+        }
+
+        const t = translations[lang] || translations['en'];
+        const pName = userBio.name || "User";
+        const pAge = userBio.age ? `${userBio.age}Y` : "N/A";
+        const pGen = userBio.gender || "N/A";
+        const pWt = userBio.weight ? `${userBio.weight}kg` : "N/A";
+
+        // Bio-data integration for real-time analysis feel
+        let profileSnippet = `<div style="font-size: 11px; background: #EBF8FF; padding: 6px; border-radius: 8px; margin-bottom: 10px; color: #2B6CB0; border-left: 3px solid #3182CE;">
+            <strong>${t.analysis_label}</strong><br>
+            Patient: ${pName} | ${pAge} | ${pGen} | ${pWt}
+        </div>`;
+        
+        let body = "";
+
+        if (matchedCat === 'critical') {
+            body = `<span style="color:var(--danger); font-weight:bold;">${t.ai_critical}</span><br><br><strong>${t.first_aid}</strong> ${t.ai_crit_aid}<br><br><strong>${t.prescription_label}:</strong> ${t.ai_crit_presc}`;
+        } else if (matchedCat === 'fever') {
+            body = `Hello ${pName}, let's get you better. <br><span style="color:var(--warning); font-weight:bold;">${t.ai_fever}</span><br><br><strong>${t.first_aid}</strong> ${t.ai_fever_aid}<br><br><strong>${t.prescription_label}:</strong> ${t.ai_fever_presc}`;
+        } else if (matchedCat === 'stomach') {
+            body = `<span style="color:var(--warning); font-weight:bold;">${t.ai_stomach}</span><br><br><strong>${t.first_aid}</strong> ${t.ai_stom_aid}<br><br><strong>${t.prescription_label}:</strong> ${t.ai_stom_presc}`;
+        } else if (matchedCat === 'headache') {
+            body = `<span style="color:var(--success); font-weight:bold;">${t.ai_headache}</span><br><br><strong>${t.first_aid}</strong> ${t.ai_head_aid}<br><br><strong>${t.prescription_label}:</strong> ${t.ai_head_presc}`;
+        } else {
+            body = t.ai_unknown;
+            profileSnippet = ""; // Don't show analysis box if it's unknown
+        }
+
+        return { html: profileSnippet + body, category: matchedCat };
+    }
+
+    function sendMessage(isQuickReply = false) {
+        const inputField = document.getElementById('chatInput');
+        const message = inputField.value.trim();
+        if (!message) return;
+
+        const chatHistory = document.getElementById('chatHistory');
+        chatHistory.innerHTML += `<div class="bubble bubble-user">${message}</div>`;
+        inputField.value = '';
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        if (isQuickReply) {
+            setTimeout(() => {
+                const thanksReply = translations[currentLanguage].doc_thanks || translations['en'].doc_thanks;
+                chatHistory.innerHTML += `
+                    <div class="bubble bubble-ai" style="animation: slideUp 0.3s ease; border-left: 4px solid var(--success);">
+                        <i class="fa-solid fa-user-doctor" style="color: var(--success); margin-bottom: 5px;"></i> <b style="color: var(--success);">Dr. Sharma</b><br>
+                        <span>${thanksReply}</span>
+                    </div>`;
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            }, 1000);
+            return;
+        }
+
+        // Show Typing Indicator
+        const typingId = 'typing-' + Date.now();
+        chatHistory.innerHTML += `
+            <div id="${typingId}" class="bubble bubble-ai typing-anim">
+                <i class="fa-solid fa-microchip"></i> ${translations[currentLanguage].analyzing}
+            </div>`;
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+
+        // Simulate Analysis processing time
+        setTimeout(() => {
+            document.getElementById(typingId).remove();
+            
+            const responseData = generateAccurateAIResponse(message, currentLanguage);
+            
+            chatHistory.innerHTML += `
+                <div class="bubble bubble-ai" style="animation: slideUp 0.3s ease;">
+                    <i class="fa-solid fa-robot" style="color: var(--primary); margin-bottom: 5px;"></i><br>
+                    <span>${responseData.html}</span>
+                </div>`;
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            if (responseData.category !== 'unknown') {
+                setTimeout(() => {
+                    const docReply = translations[currentLanguage].doc_reply;
+                    const btn1 = translations[currentLanguage].qr_uploaded;
+                    const btn2 = translations[currentLang].qr_book;
+
+                    chatHistory.innerHTML += `
+                        <div class="bubble bubble-ai" style="animation: slideUp 0.3s ease; border-left: 4px solid var(--success);">
+                            <i class="fa-solid fa-user-doctor" style="color: var(--success); margin-bottom: 5px;"></i> <b style="color: var(--success);">Dr. Sharma</b><br>
+                            <span>${docReply}</span>
+                            <div style="margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px;">
+                                <button class="symptom-chip" onclick="sendQuickReply(this)" style="font-size:12px; padding: 6px 12px; border-color:var(--success); color:var(--success);">${btn1}</button>
+                                <button class="symptom-chip" onclick="sendQuickReply(this)" style="font-size:12px; padding: 6px 12px; border-color:var(--success); color:var(--success);">${btn2}</button>
+                            </div>
+                        </div>`;
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                }, 3000); 
+            }
+        }, 1500); 
+    }
+
+    // --- Translations Dictionary (Full Application Coverage) ---
+    const translations = {
+        en: {
+            welcome: "Hello", ai_doc: "AI Doctor Chat", select_symp: "Select Symptoms", hospitals: "Hospitals", detect_loc: "Detect My Location",
+            nav_home: "Home", nav_consult: "Consult", nav_check: "Check", nav_map: "Map",
+            nav_meds: "Meds Reminder", add_med: "Add Medicine", your_meds: "Your Schedule", freq_daily: "Daily", freq_weekly: "Weekly", freq_needed: "As Needed", no_meds: "No medicines added yet.", med_desc: "Never miss your medication. Add your schedule below.", 
+            sos: "Emergency SOS", sos_desc: "Dispatch Ambulance", est_cost: "Est. Treatment Cost:", risk_analysis: "Risk Analysis", predicted_disease: "Predicted Disease:", risk_category: "Risk Category:", suggested_doctor: "Suggested Doctor:", find_dr_hospital: "Find Nearby Doctor",
+            cat_general: "General & Systemic", cat_respiratory: "Head, Neck & Respiratory", cat_cardio: "Chest & Cardiovascular", cat_digestive: "Digestive & Abdomen", cat_neuro: "Muscles, Skin & Neurological",
+            symp_fever: "Fever", symp_chills: "Chills", symp_fatigue: "Fatigue", symp_dizziness: "Dizziness", symp_sweating: "Sweating", symp_weight_loss: "Weight Loss", symp_weakness: "Weakness",
+            symp_headache: "Headache", symp_cough: "Cough", symp_sore_throat: "Sore Throat", symp_runny_nose: "Runny Nose", symp_breath: "Shortness of Breath", symp_wheezing: "Wheezing", symp_earache: "Earache", symp_vision: "Vision Changes",
+            symp_chest: "Chest Pain", symp_palpitation: "Palpitations",
+            symp_nausea: "Nausea/Vomiting", symp_stomach_ache: "Stomach Ache", symp_diarrhea: "Diarrhea", symp_constipation: "Constipation", symp_appetite_loss: "Loss of Appetite",
+            symp_joint_pain: "Muscle/Joint Pain", symp_rash: "Skin Rash", symp_swelling: "Swelling", symp_numbness: "Numbness", symp_confusion: "Confusion", symp_anxiety: "Anxiety",
+            chat_welcome: "Hello {name}! I am your AI Doctor. Please describe your symptoms. You can type or use the voice recorder. I'm here to help! 🩺", ai_assist: "AI Chat",
+            scan: "Scan Report", scan_desc: "Upload and manage your medical scan records securely.", upload_scan: "Upload Scan Record", past_scans: "Past Records", ai_explain: "AI Explain",
+            doc_reply: "Hello, I have reviewed your AI analysis. Please upload your latest scan records or book an appointment for further evaluation.",
+            qr_uploaded: "I have uploaded it", qr_book: "Book an appointment", doc_thanks: "Thank you. I will check the records and get back to you shortly.",
+            family_title: "Family Profiles", family_desc: "Add family members to track their health and quick access during SOS.", add_member: "Add Member", saved_members: "Saved Members",
+            sos_tracking_title: "SOS Tracking", amb_dispatched: "Ambulance Dispatched!", eta: "ETA: 5 Mins", cancel_sos: "Cancel SOS", insurance_title: "Recommended Insurance Schemes:",
+            insurance_schemes: "Insurance Schemes", insurance_desc: "View available health coverage", insurance_desc_full: "Explore health insurance schemes to cover your medical expenses.",
+            first_aid: "First-Aid & Precautions:", hospital_desc: "Find nearby hospitals, clinics, pharmacies, and emergency services.",
+            sign_in: "Save & Continue", secure_login: "Profile Setup", login_desc: "Create your AI health profile.", send_otp: "Send OTP to Email", cont_google: "Continue with Google",
+            pl_name: "Full Name", pl_rel: "Relation (e.g. Mother)", pl_blood: "Blood Group", pl_age: "Age", pl_gender: "Gender", opt_male:"Male", opt_female:"Female", opt_other:"Other", pl_weight: "Weight (kg)", pl_height: "Height (cm)", pl_med: "Medicine Name", pl_chat: "Type symptoms...", no_family: "No family members added yet.", active_scheme: "Active Scheme",
+            alert_fill_details: "Please fill name and relation.", alert_scan_upload: "Scan uploaded successfully!", alert_sos_cancel: "SOS Cancelled successfully.", alert_med_details: "Please enter both Medicine Name and Time.", alert_select_symp: "Please select at least one symptom.", alert_emergency: "EMERGENCY ALERT: Critical symptoms detected. Please use the SOS feature or proceed to the nearest emergency room immediately.", call_driver: "Call Driver", view_map: "View My Location", search_all: "Search All Hospitals & Clinics",
+            analyzing: "Analyzing symptoms based on your profile...", analysis_label: "Real-Time AI Analysis", prescription_label: "Prescription",
+            ai_critical: "Possible cardiac or severe respiratory issue detected.", ai_crit_aid: "Sit down immediately. Do not physically exert yourself. Stay calm.", ai_crit_presc: "Do NOT self-medicate. Visit a hospital or call an ambulance immediately.",
+            ai_fever: "Your symptoms indicate a possible viral infection or flu.", ai_fever_aid: "Get plenty of rest and stay hydrated with warm fluids. Isolate yourself to prevent spreading.", ai_fever_presc: "You can safely take Paracetamol 500mg after food.",
+            ai_stomach: "Possible gastric issue or food poisoning.", ai_stom_aid: "Avoid spicy foods, outside food, and dairy temporarily.", ai_stom_presc: "Drink plenty of ORS (fluids) to stay hydrated.",
+            ai_headache: "Tension headache or dehydration suspected.", ai_head_aid: "Rest your eyes from screens. Move to a quiet, dark room.", ai_head_presc: "Drink 2 glasses of water. Take a mild painkiller if the pain is severe.",
+            ai_unknown: "I need a bit more detail to accurately assess your condition. Could you specify your symptoms clearly? (e.g., fever, stomach ache, chest pain)", ai_explain_alert: "The report indicates parameters are generally within normal ranges. However, slight variations might exist based on medical history. Please consult your physician for a conclusive diagnosis."
+        },
+        ta: {
+            welcome: "வணக்கம்", ai_doc: "AI மருத்துவர்", select_symp: "அறிகுறிகள்", hospitals: "மருத்துவமனைகள்", detect_loc: "என் இருப்பிடத்தை அறி",
+            nav_home: "முகப்பு", nav_consult: "ஆலோசனை", nav_check: "பரிசோதனை", nav_map: "வரைபடம்",
+            nav_meds: "மருந்து நினைவூட்டல்", add_med: "மருந்து சேர்", your_meds: "உங்கள் அட்டவணை", freq_daily: "தினமும்", freq_weekly: "வாரந்தோறும்", freq_needed: "தேவைப்படும் போது", no_meds: "இன்னும் மருந்துகள் சேர்க்கப்படவில்லை.", med_desc: "உங்கள் மருந்துகளை ஒருபோதும் மறக்காதீர்கள். கீழே உங்கள் அட்டவணையைச் சேர்க்கவும்.", 
+            sos: "அவசர SOS", sos_desc: "ஆம்புலன்ஸை அனுப்பு", est_cost: "மதிப்பிடப்பட்ட செலவு:", risk_analysis: "அபாய பகுப்பாய்வு", predicted_disease: "கணிக்கப்பட்ட நோய்:", risk_category: "அபாய வகை:", suggested_doctor: "பரிந்துரைக்கப்பட்ட மருத்துவர்:", find_dr_hospital: "அருகிலுள்ள மருத்துவரைத் தேடு",
+            cat_general: "பொதுவான அறிகுறிகள்", cat_respiratory: "தலை, கழுத்து & சுவாசம்", cat_cardio: "நெஞ்சு & இதயம்", cat_digestive: "வயிறு & செரிமானம்", cat_neuro: "தசை, தோல் & நரம்பியல்",
+            symp_fever: "காய்ச்சல்", symp_chills: "குளிர்", symp_fatigue: "உடல் சோர்வு", symp_dizziness: "தலைச்சுற்றல்", symp_sweating: "வியர்வை", symp_weight_loss: "எடை குறைவு", symp_weakness: "பலவீனம்",
+            symp_headache: "தலைவலி", symp_cough: "இருமல்", symp_sore_throat: "தொண்டை வலி", symp_runny_nose: "மூக்கு ஒழுகுதல்", symp_breath: "மூச்சுத் திணறல்", symp_wheezing: "மூச்சு இரைப்பு", symp_earache: "காது வலி", symp_vision: "பார்வை மங்கலாவது",
+            symp_chest: "நெஞ்சு வலி", symp_palpitation: "படபடப்பு",
+            symp_nausea: "குமட்டல்/வாந்தி", symp_stomach_ache: "வயிற்று வலி", symp_diarrhea: "வயிற்றுப்போக்கு", symp_constipation: "மலச்சிக்கல்", symp_appetite_loss: "பசியின்மை",
+            symp_joint_pain: "தசை/மூட்டு வலி", symp_rash: "தோல் வெடிப்பு", symp_swelling: "வீக்கம்", symp_numbness: "மரத்துப் போதல்", symp_confusion: "மனக் குழப்பம்", symp_anxiety: "பதட்டம்",
+            chat_welcome: "வணக்கம் {name}! நான் உங்கள் AI மருத்துவர். உங்கள் அறிகுறிகளை விவரிக்கவும். நீங்கள் தட்டச்சு செய்யலாம் அல்லது குரல் பதிவைப் பயன்படுத்தலாம்.", ai_assist: "AI உரை",
+            scan: "ஸ்கேன் அறிக்கை", scan_desc: "உங்கள் மருத்துவ ஸ்கேன் பதிவுகளை பாதுகாப்பாக நிர்வகிக்கவும்.", upload_scan: "ஸ்கேன் பதிவேற்றவும்", past_scans: "பழைய பதிவுகள்", ai_explain: "AI விளக்கம்",
+            doc_reply: "வணக்கம், உங்கள் AI பகுப்பாய்வை நான் சரிபார்த்தேன். மேலும் அறிய உங்கள் ஸ்கேன் பதிவுகளைப் பதிவேற்றவும் அல்லது முன்பதிவு செய்யவும்.",
+            qr_uploaded: "நான் பதிவேற்றிவிட்டேன்", qr_book: "முன்பதிவு செய்", doc_thanks: "நன்றி. நான் சரிபார்த்துவிட்டு கூறுகிறேன்.",
+            family_title: "குடும்ப சுயவிவரங்கள்", family_desc: "அவசர காலத்தில் விரைவாக அணுக குடும்ப உறுப்பினர்களைச் சேர்க்கவும்.", add_member: "உறுப்பினரைச் சேர்", saved_members: "சேமிக்கப்பட்டவை",
+            sos_tracking_title: "SOS கண்காணிப்பு", amb_dispatched: "ஆம்புலன்ஸ் அனுப்பப்பட்டது!", eta: "வருவதற்கு: 5 நிமிடம்", cancel_sos: "SOS ரத்து செய்", insurance_title: "பரிந்துரைக்கப்பட்ட காப்பீட்டு திட்டங்கள்:",
+            insurance_schemes: "காப்பீட்டு திட்டங்கள்", insurance_desc: "சுகாதார காப்பீடுகளைக் காண்க", insurance_desc_full: "உங்கள் மருத்துவ செலவுகளை ஈடுகட்ட சுகாதார காப்பீட்டு திட்டங்களை ஆராயுங்கள்.",
+            first_aid: "தற்காப்பு மற்றும் முதலுதவி:", hospital_desc: "அருகிலுள்ள மருத்துவமனைகள், கிளினிக்குகள், மருந்தகங்கள் மற்றும் அவசர சேவைகளைக் கண்டறியவும்.",
+            sign_in: "சேமி & தொடரவும்", secure_login: "சுயவிவர அமைப்பு", login_desc: "உங்கள் AI ஆரோக்கிய சுயவிவரத்தை உருவாக்கவும்.", send_otp: "OTP அனுப்பு", cont_google: "Google உடன் தொடரவும்",
+            pl_name: "முழுப் பெயர்", pl_rel: "உறவு (உ.ம்: அம்மா)", pl_blood: "இரத்தம்", pl_age: "வயது", pl_gender: "பாலினம்", opt_male:"ஆண்", opt_female:"பெண்", opt_other:"மற்றவை", pl_weight: "எடை (kg)", pl_height: "உயரம் (cm)", pl_med: "மருந்தின் பெயர்", pl_chat: "அறிகுறிகளை உள்ளிடவும்...", no_family: "குடும்ப உறுப்பினர்கள் சேர்க்கப்படவில்லை.", active_scheme: "செயலில் உள்ள திட்டம்",
+            alert_fill_details: "பெயர் மற்றும் உறவை நிரப்பவும்.", alert_scan_upload: "ஸ்கேன் வெற்றிகரமாக பதிவேற்றப்பட்டது!", alert_sos_cancel: "SOS ரத்து செய்யப்பட்டது.", alert_med_details: "மருந்தின் பெயர் மற்றும் நேரத்தை உள்ளிடவும்.", alert_select_symp: "குறைந்தபட்சம் ஒரு அறிகுறியையாவது தேர்ந்தெடுக்கவும்.", alert_emergency: "அவசர எச்சரிக்கை: முக்கியமான அறிகுறிகள் கண்டறியப்பட்டன. உடனடியாக மருத்துவமனைக்குச் செல்லவும்.", call_driver: "ஓட்டுநரை அழை", view_map: "என் இருப்பிடத்தைக் காண்க", search_all: "மருத்துவமனைகளைத் தேடு",
+            analyzing: "உங்கள் சுயவிவரத்தின் அடிப்படையில் பகுப்பாய்வு நடக்கிறது...", analysis_label: "நிகழ்நேர AI பகுப்பாய்வு", prescription_label: "பரிந்துரை",
+            ai_critical: "மாரடைப்பு அல்லது மூச்சுத் திணறல் இருக்கலாம்.", ai_crit_aid: "அமைதியாக அமரவும். நடப்பதைத் தவிர்க்கவும்.", ai_crit_presc: "நீங்களாகவே மருந்து எடுக்க வேண்டாம். உடனடியாக மருத்துவமனைக்குச் செல்லவும்.",
+            ai_fever: "வைரஸ் காய்ச்சலாக இருக்கலாம்.", ai_fever_aid: "நிறைய ஓய்வெடுக்கவும், வெதுவெதுப்பான நீர் குடிக்கவும்.", ai_fever_presc: "உணவு உண்ட பின் பாராசிட்டமால் 500mg எடுக்கவும்.",
+            ai_stomach: "செரிமான பிரச்சனை அல்லது உணவு ஒவ்வாமை.", ai_stom_aid: "காரமான உணவுகளைத் தவிர்க்கவும்.", ai_stom_presc: "ORS குடிக்கவும், எளிதில் செரிக்கும் உணவை உண்ணவும்.",
+            ai_headache: "மன அழுத்தம் அல்லது நீர்ச்சத்து குறைவால் தலைவலி இருக்கலாம்.", ai_head_aid: "செல்போன் பார்ப்பதை தவிர்த்து ஓய்வெடுக்கவும்.", ai_head_presc: "தண்ணீர் குடித்து ஓய்வெடுக்கவும்.",
+            ai_unknown: "எனக்கு மேலும் விவரங்கள் தேவை. காய்ச்சல், வயிற்று வலி, அல்லது நெஞ்சு வலி உள்ளதா எனத் தெளிவாகக் கூறவும்.", ai_explain_alert: "அறிக்கை அளவுருக்கள் பொதுவாக சாதாரண வரம்புகளுக்குள் இருப்பதைக் குறிக்கிறது. மருத்துவரை அணுகவும்."
+        },
+        hi: {
+            welcome: "नमस्ते", ai_doc: "AI डॉक्टर चैट", select_symp: "लक्षण चुनें", hospitals: "अस्पताल", detect_loc: "मेरा स्थान पता करें",
+            nav_home: "होम", nav_consult: "परामर्श", nav_check: "जांच", nav_map: "नक्शा",
+            nav_meds: "दवा अनुस्मारक", add_med: "दवा जोड़ें", your_meds: "आपका शेड्यूल", freq_daily: "दैनिक", freq_weekly: "साप्ताहिक", freq_needed: "जरूरत पड़ने पर", no_meds: "अभी तक कोई दवा नहीं जोड़ी गई है।", med_desc: "अपनी दवा कभी न भूलें। नीचे अपना शेड्यूल जोड़ें।", 
+            sos: "आपातकालीन SOS", sos_desc: "एम्बुलेंस भेजें", est_cost: "अनुमानित लागत:", risk_analysis: "जोखिम विश्लेषण", predicted_disease: "संभावित बीमारी:", risk_category: "जोखिम श्रेणी:", suggested_doctor: "सुझाए गए डॉक्टर:", find_dr_hospital: "नजदीकी डॉक्टर खोजें",
+            cat_general: "सामान्य और प्रणालीगत", cat_respiratory: "सिर, गर्दन और श्वसन", cat_cardio: "छाती और हृदय", cat_digestive: "पाचन और पेट", cat_neuro: "मांसपेशियां, त्वचा और न्यूरोलॉजिकल",
+            symp_fever: "बुखार", symp_chills: "ठंड लगना", symp_fatigue: "थकान", symp_dizziness: "चक्कर आना", symp_sweating: "पसीना आना", symp_weight_loss: "वजन कम होना", symp_weakness: "कमजोरी",
+            symp_headache: "सिरदर्द", symp_cough: "खांसी", symp_sore_throat: "गले में खराश", symp_runny_nose: "बहती नाक", symp_breath: "सांस लेने में तकलीफ", symp_wheezing: "घबराहट", symp_earache: "कान दर्द", symp_vision: "दृष्टि में बदलाव",
+            symp_chest: "छाती में दर्द", symp_palpitation: "धड़कन तेज होना",
+            symp_nausea: "मतली/उल्टी", symp_stomach_ache: "पेट दर्द", symp_diarrhea: "दस्त", symp_constipation: "कब्ज", symp_appetite_loss: "भूख में कमी",
+            symp_joint_pain: "मांसपेशियों/जोड़ों का दर्द", symp_rash: "त्वचा पर दाने", symp_swelling: "सूजन", symp_numbness: "सुन्नपन", symp_confusion: "भ्रम", symp_anxiety: "चिंता",
+            chat_welcome: "नमस्ते {name}! मैं आपका AI डॉक्टर हूं। कृपया अपने लक्षणों का वर्णन करें।", ai_assist: "AI चैट",
+            scan: "स्कैन रिपोर्ट", scan_desc: "अपने मेडिकल स्कैन रिकॉर्ड सुरक्षित रूप से प्रबंधित करें।", upload_scan: "स्कैन अपलोड करें", past_scans: "पिछले रिकॉर्ड", ai_explain: "AI व्याख्या",
+            doc_reply: "नमस्ते, मैंने आपके AI विश्लेषण की जांच की है। कृपया अपनी स्कैन रिपोर्ट अपलोड करें या अपॉइंटमेंट बुक करें।",
+            qr_uploaded: "मैंने अपलोड कर दिया है", qr_book: "अपॉइंटमेंट बुक करें", doc_thanks: "धन्यवाद। मैं जांच करके आपको बताऊंगा।",
+            family_title: "पारिवारिक प्रोफ़ाइल", family_desc: "आपात स्थिति में त्वरित पहुंच के लिए परिवार के सदस्यों को जोड़ें।", add_member: "सदस्य जोड़ें", saved_members: "सहेजे गए सदस्य",
+            sos_tracking_title: "SOS ट्रैकिंग", amb_dispatched: "एम्बुलेंस भेज दी गई है!", eta: "समय: 5 मिनट", cancel_sos: "SOS रद्द करें", insurance_title: "अनुशंसित बीमा योजनाएं:",
+            insurance_schemes: "बीमा योजनाएं", insurance_desc: "उपलब्ध स्वास्थ्य कवरेज देखें", insurance_desc_full: "अपने चिकित्सा खर्चों को कवर करने के लिए स्वास्थ्य बीमा योजनाओं का अन्वेषण करें।",
+            first_aid: "प्राथमिक चिकित्सा:", hospital_desc: "आस-पास के अस्पताल, क्लीनिक, फार्मेसियों और आपातकालीन सेवाओं का पता लगाएं।",
+            sign_in: "सहेजें और जारी रखें", secure_login: "प्रोफ़ाइल सेटअप", login_desc: "अपनी AI स्वास्थ्य प्रोफ़ाइल बनाएं।", send_otp: "OTP भेजें", cont_google: "Google के साथ जारी रखें",
+            pl_name: "पूरा नाम", pl_rel: "संबंध", pl_blood: "रक्त समूह", pl_age: "आयु", pl_gender: "लिंग", opt_male:"पुरुष", opt_female:"महिला", opt_other:"अन्य", pl_weight: "वजन (kg)", pl_height: "ऊंचाई (cm)", pl_med: "दवा का नाम", pl_chat: "लक्षण लिखें...", no_family: "कोई परिवार सदस्य नहीं जोड़ा गया।", active_scheme: "सक्रिय योजना",
+            alert_fill_details: "कृपया नाम और संबंध भरें।", alert_scan_upload: "स्कैन सफलतापूर्वक अपलोड किया गया!", alert_sos_cancel: "SOS सफलतापूर्वक रद्द कर दिया गया।", alert_med_details: "कृपया दवा का नाम और समय दर्ज करें।", alert_select_symp: "कृपया कम से कम एक लक्षण चुनें।", alert_emergency: "आपातकालीन चेतावनी: गंभीर लक्षण। तुरंत अस्पताल जाएं।", call_driver: "ड्राइवर को कॉल करें", view_map: "मेरा स्थान देखें", search_all: "सभी अस्पताल खोजें",
+            analyzing: "आपकी प्रोफ़ाइल के आधार पर विश्लेषण कर रहा हूँ...", analysis_label: "रीयल-टाइम विश्लेषण", prescription_label: "नुस्खा",
+            ai_critical: "हृदय या श्वसन समस्या हो सकती है।", ai_crit_aid: "आराम से बैठें और कोई शारीरिक श्रम न करें।", ai_crit_presc: "कृपया स्वयं दवा न लें और तुरंत अस्पताल जाएं।",
+            ai_fever: "वायरल बुखार या फ्लू के लक्षण।", ai_fever_aid: "आराम करें और खूब गर्म तरल पदार्थ पिएं।", ai_fever_presc: "आप भोजन के बाद पैरासिटामोल 500mg ले सकते हैं।",
+            ai_stomach: "गैस्ट्रिक समस्या या फूड पॉइजनिंग।", ai_stom_aid: "मसालेदार खाना न खाएं।", ai_stom_presc: "ओआरएस (ORS) पिएं और हल्का भोजन करें।",
+            ai_headache: "तनाव या डिहाइड्रेशन।", ai_head_aid: "स्क्रीन से दूर रहें और शांत जगह पर आराम करें।", ai_head_presc: "खूब पानी पिएं और आराम करें।",
+            ai_unknown: "मुझे और विवरण चाहिए। कृपया अपने लक्षणों को स्पष्ट करें (जैसे बुखार, सिरदर्द)।", ai_explain_alert: "रिपोर्ट सामान्य है। अधिक जानकारी के लिए डॉक्टर से सलाह लें।"
+        },
+        te: {
+            welcome: "నమస్కారం", ai_doc: "AI డాక్టర్ చాట్", select_symp: "లక్షణాలను ఎంచుకోండి", hospitals: "ఆసుపత్రులు", detect_loc: "నా స్థానాన్ని కనుగొనండి",
+            nav_home: "హోమ్", nav_consult: "సంప్రదింపులు", nav_check: "తనిఖీ", nav_map: "మ్యాప్",
+            nav_meds: "మందుల రిమైండర్", add_med: "మందును జోడించండి", your_meds: "మీ షెడ్యూల్", freq_daily: "రోజువారీ", freq_weekly: "వారానికోసారి", freq_needed: "అవసరమైనప్పుడు", no_meds: "ఇంకా మందులు జోడించబడలేదు.", med_desc: "మీ మందులను ఎప్పుడూ మర్చిపోవద్దు. మీ షెడ్యూల్‌ను క్రింద జోడించండి.", 
+            sos: "అత్యవసర SOS", sos_desc: "అంబులెన్స్‌ను పంపండి", est_cost: "అంచనా వ్యయం:", risk_analysis: "ప్రమాద విశ్లేషణ", predicted_disease: "ఊహించిన వ్యాధి:", risk_category: "ప్రమాద వర్గం:", suggested_doctor: "సూచించిన డాక్టర్:", find_dr_hospital: "సమీప వైద్యుడిని కనుగొనండి",
+            cat_general: "సాధారణ & దైహిక", cat_respiratory: "తల, మెడ & శ్వాసకోశ", cat_cardio: "ఛాతీ & హృదయ సంబంధ", cat_digestive: "జీర్ణ & పొత్తికడుపు", cat_neuro: "కండరాలు, చర్మం & నాడీ సంబంధిత",
+            symp_fever: "జ్వరం", symp_chills: "చలి", symp_fatigue: "అలసట", symp_dizziness: "తలతిరగడం", symp_sweating: "చెమట", symp_weight_loss: "బరువు తగ్గడం", symp_weakness: "బలహీనత",
+            symp_headache: "తలనొప్పి", symp_cough: "దగ్గు", symp_sore_throat: "గొంతు నొప్పి", symp_runny_nose: "ముక్కు కారడం", symp_breath: "శ్వాస ఆడకపోవుట", symp_wheezing: "గురక", symp_earache: "చెవి నొప్పి", symp_vision: "దృష్టి మార్పులు",
+            symp_chest: "ఛాతీ నొప్పి", symp_palpitation: "దడ",
+            symp_nausea: "వికారం/వాంతులు", symp_stomach_ache: "కడుపు నొప్పి", symp_diarrhea: "విరేచనాలు", symp_constipation: "మలబద్ధకం", symp_appetite_loss: "ఆకలి లేకపోవడం",
+            symp_joint_pain: "కండరాల/కీళ్ల నొప్పి", symp_rash: "చర్మం దద్దుర్లు", symp_swelling: "వాపు", symp_numbness: "తిమ్మిరి", symp_confusion: "గందరగోళం", symp_anxiety: "ఆందోళన",
+            chat_welcome: "నమస్కారం {name}! నేను మీ AI డాక్టర్. దయచేసి మీ లక్షణాలను వివరించండి.", ai_assist: "AI చాట్",
+            scan: "స్కాన్ రిపోర్ట్", scan_desc: "మీ వైద్య స్కాన్ రికార్డులను సురక్షితంగా నిర్వహించండి.", upload_scan: "స్కాన్ అప్‌లోడ్ చేయండి", past_scans: "గత రికార్డులు", ai_explain: "AI వివరణ",
+            doc_reply: "నేను మీ AI విశ్లేషణను పరిశీలించాను. దయచేసి మీ స్కాన్ నివేదికలను అప్‌లోడ్ చేయండి లేదా అపాయింట్‌మెంట్ బుక్ చేయండి.",
+            qr_uploaded: "నేను అప్‌లోడ్ చేసాను", qr_book: "అపాయింట్‌మెంట్ బుక్ చేయండి", doc_thanks: "ధన్యವಾದాలు. నేను తనిఖీ చేసి మీకు తెలియజేస్తాను.",
+            family_title: "కుటుంబ ప్రొఫైల్స్", family_desc: "అత్యవసర సమయంలో త్వరిత ప్రాప్యత కోసం కుటుంబ సభ్యులను జోడించండి.", add_member: "సభ్యుడిని జోడించండి", saved_members: "సేవ్ చేయబడిన సభ్యులు",
+            sos_tracking_title: "SOS ట్రాకింగ్", amb_dispatched: "అంబులెన్స్ పంపబడింది!", eta: "సమయం: 5 నిమిషాలు", cancel_sos: "SOS రద్దు చేయండి", insurance_title: "సిఫార్సు చేయబడిన భీమా పథకాలు:",
+            insurance_schemes: "భీమా పథకాలు", insurance_desc: "అందుబాటులో ఉన్న ఆరోగ్య కవరేజీని చూడండి", insurance_desc_full: "మీ వైద్య ఖర్చులను కవర్ చేయడానికి ఆరోగ్య భీమా పథకాలను అన్వేషించండి.",
+            first_aid: "ప్రథమ చికిత్స:", hospital_desc: "సమీపంలోని ఆసుపత్రులు, క్లినిక్‌లు మరియు ఫార్మసీలను కనుగొనండి.",
+            sign_in: "సేవ్ చేయండి", secure_login: "ప్రొఫైల్ సెటప్", login_desc: "మీ AI ఆరోగ్య ప్రొఫైల్‌ను సృష్టించండి.", send_otp: "OTP పంపండి", cont_google: "Google తో కొనసాగించండి",
+            pl_name: "పేరు", pl_rel: "సంబంధం", pl_blood: "రక్తం", pl_age: "వయస్సు", pl_gender: "లింగం", opt_male:"పురుషుడు", opt_female:"స్త్రీ", opt_other:"ఇతర", pl_weight: "బరువు", pl_height: "ఎత్తు", pl_med: "మందు పేరు", pl_chat: "లక్షణాలను టైప్ చేయండి...", no_family: "కుటుంబ సభ్యులు లేరు.", active_scheme: "క్రియాశీల పథకం",
+            alert_fill_details: "దయచేసి పేరు మరియు సంబంధాన్ని పూరించండి.", alert_scan_upload: "స్కాన్ అప్‌లోడ్ చేయబడింది!", alert_sos_cancel: "SOS రద్దు చేయబడింది.", alert_med_details: "దయచేసి మందు పేరు మరియు సమయాన్ని నమోదు చేయండి.", alert_select_symp: "కనీసం ఒక లక్షణాన్ని ఎంచుకోండి.", alert_emergency: "అత్యవసర హెచ్చరిక: తీవ్రమైన లక్షణాలు. దయచేసి వెంటనే ఆసుపత్రికి వెళ్లండి.", call_driver: "డ్రైవర్‌కు కాల్ చేయండి", view_map: "నా స్థానాన్ని వీక్షించండి", search_all: "ఆసుపత్రులను శోధించండి",
+            analyzing: "విశ్లేషణ జరుగుతోంది...", analysis_label: "విశ్లేషణ", prescription_label: "ప్రిస్క్రిప్షన్",
+            ai_critical: "గుండె లేదా శ్వాసకోశ సమస్య కావచ్చు.", ai_crit_aid: "కదలకుండా కూర్చోండి.", ai_crit_presc: "దయచేసి వెంటనే ఆసుపత్రికి వెళ్లండి. మీరే మందులు వేసుకోకండి.",
+            ai_fever: "వైరల్ జ్వరం కావచ్చు.", ai_fever_aid: "తగినంత విశ్రాంతి తీసుకోండి, వేడి నీరు త్రాగండి.", ai_fever_presc: "భోజనం తర్వాత పారాసెటమాల్ 500mg తీసుకోండి.",
+            ai_stomach: "గ్యాస్ట్రిక్ సమస్య లేదా ఫుడ్ పాయిజనింగ్.", ai_stom_aid: "కారం తినకండి.", ai_stom_presc: "ORS త్రాగాలి మరియు తేలికపాటి ఆహారం తినండి.",
+            ai_headache: "తలనొప్పి లేదా నిర్జలీకరణ.", ai_head_aid: "కళ్ళకు విశ్రాంతి ఇవ్వండి.", ai_head_presc: "నీరు త్రాగి విశ్రాంతి తీసుకోండి.",
+            ai_unknown: "నాకు మరిన్ని వివరాలు కావాలి. దయచేసి మీ లక్షణాలను స్పష్టంగా చెప్పండి.", ai_explain_alert: "నివేదిక సాధారణంగా ఉన్నట్లు చూపిస్తుంది. వైద్యుడిని సంప్రదించండి."
+        },
+        ml: {
+            welcome: "നമസ്കാരം", ai_doc: "AI ഡോക്ടർ", select_symp: "ലക്ഷണങ്ങൾ", hospitals: "ആശുപത്രികൾ", detect_loc: "എന്റെ സ്ഥാനം",
+            nav_home: "ഹോം", nav_consult: "ഡോക്ടർ", nav_check: "പരിശോധിക്കുക", nav_map: "മാപ്പ്",
+            nav_meds: "മരുന്ന് ഓർമ്മപ്പെടുത്തൽ", add_med: "മരുന്ന് ചേർക്കുക", your_meds: "ഷെഡ്യൂൾ", freq_daily: "ദിവസേന", freq_weekly: "പ്രതിവാര", freq_needed: "ആവശ്യമുള്ളപ്പോൾ", no_meds: "മരുന്നുകൾ ചേർത്തിട്ടില്ല.", med_desc: "നിങ്ങളുടെ മരുന്ന് ഒരിക്കലും മറക്കരുത്.", 
+            sos: "അടിയന്തര SOS", sos_desc: "ആംബുലൻസ് അയയ്‌ക്കുക", est_cost: "ഏകദേശ ചെലവ്:", risk_analysis: "അപകടസാധ്യത വിശകലനം", predicted_disease: "രോഗം:", risk_category: "വിഭാഗം:", suggested_doctor: "ഡോക്ടർ:", find_dr_hospital: "അടുത്തുള്ള ഡോക്ടറെ കണ്ടെത്തുക",
+            cat_general: "പൊതുവായ ലക്ഷണങ്ങൾ", cat_respiratory: "തല, കഴുത്ത്, ശ്വസനം", cat_cardio: "നെഞ്ചും ഹൃദയവും", cat_digestive: "ദഹനവും വയറും", cat_neuro: "പേശികൾ, ചർമ്മം, ന്യൂറോളജിക്കൽ",
+            symp_fever: "പനി", symp_chills: "വിറയൽ", symp_fatigue: "ക്ഷീണം", symp_dizziness: "തലകറക്കം", symp_sweating: "വിയർപ്പ്", symp_weight_loss: "ശരീരഭാരം കുറയുക", symp_weakness: "ബലഹീനത",
+            symp_headache: "തലവേദന", symp_cough: "ചുമ", symp_sore_throat: "തൊണ്ടവേദന", symp_runny_nose: "മൂക്കൊലിപ്പ്", symp_breath: "ശ്വാസംമുട്ടൽ", symp_wheezing: "വലിവ്", symp_earache: "ചെവി വേദന", symp_vision: "കാഴ്ചയിലെ മാറ്റങ്ങൾ",
+            symp_chest: "നെഞ്ചുവേദന", symp_palpitation: "നെഞ്ചിടിപ്പ്",
+            symp_nausea: "ഓക്കാനം/ഛർദ്ദി", symp_stomach_ache: "വയറുവേദന", symp_diarrhea: "അതിസാരം", symp_constipation: "മലബന്ധം", symp_appetite_loss: "വിശപ്പില്ലായ്മ",
+            symp_joint_pain: "പേശി/സന്ധി വേദന", symp_rash: "ചർമ്മത്തിലെ ചുണങ്ങ്", symp_swelling: "വീക്കം", symp_numbness: "മരവിപ്പ്", symp_confusion: "ആശയക്കുഴപ്പം", symp_anxiety: "ഉത്കണ്ഠ",
+            chat_welcome: "നമസ്കാരം {name}! ഞാൻ നിങ്ങളുടെ AI ഡോക്ടറാണ്. ലക്ഷണങ്ങൾ വിശദീകരിക്കുക.", ai_assist: "AI ചാറ്റ്",
+            scan: "സ്കാൻ റിപ്പോർട്ട്", scan_desc: "മെഡിക്കൽ സ്കാൻ റെക്കോർഡുകൾ ചേർക്കുക.", upload_scan: "സ്കാൻ അപ്‌ലോഡ് ചെയ്യുക", past_scans: "റെക്കോർഡുകൾ", ai_explain: "AI വിശദീകരണം",
+            doc_reply: "നമസ്കാരം, സ്കാൻ റിപ്പോർട്ടുകൾ അപ്‌ലോഡ് ചെയ്യുക അല്ലെങ്കിൽ അപ്പോയിന്റ്മെന്റ് എടുക്കുക.",
+            qr_uploaded: "ഞാൻ അപ്‌ലോഡ് ചെയ്തു", qr_book: "അപ്പോയിന്റ്മെന്റ് എടുക്കുക", doc_thanks: "നന്ദി. ഞാൻ പരിശോധിച്ച് മറുപടി നൽകാം.",
+            family_title: "കുടുംബ പ്രൊഫൈലുകൾ", family_desc: "കുടുംബാംഗങ്ങളെ ചേർക്കുക.", add_member: "അംഗത്തെ ചേർക്കുക", saved_members: "അംഗങ്ങൾ",
+            sos_tracking_title: "SOS ട്രാക്കിംഗ്", amb_dispatched: "ആംബുലൻസ് അയച്ചു!", eta: "സമയം: 5 മിനിറ്റ്", cancel_sos: "SOS റദ്ദാക്കുക", insurance_title: "ഇൻഷുറൻസ് സ്കീമുകൾ:",
+            insurance_schemes: "ഇൻഷുറൻസ്", insurance_desc: "ആരോഗ്യ പരിരക്ഷ കാണുക", insurance_desc_full: "ആരോഗ്യ ഇൻഷുറൻസ് സ്കീമുകൾ പര്യവേക്ഷണം ചെയ്യുക.",
+            first_aid: "പ്രഥമശുശ്രൂഷ:", hospital_desc: "അടുത്തുള്ള ആശുപത്രികൾ കണ്ടെത്തുക.",
+            sign_in: "തുടരുക", secure_login: "പ്രൊഫൈൽ", login_desc: "AI ആരോഗ്യ പ്രൊഫൈൽ സൃഷ്ടിക്കുക.", send_otp: "OTP അയയ്ക്കുക", cont_google: "Google-ലൂടെ തുടരുക",
+            pl_name: "പേര്", pl_rel: "ബന്ധം", pl_blood: "രക്തം", pl_age: "പ്രായം", pl_gender: "ലിംഗം", opt_male:"പുരുഷൻ", opt_female:"സ്ത്രീ", opt_other:"മറ്റുള്ളവ", pl_weight: "ഭാരം", pl_height: "ഉയരം", pl_med: "മരുന്നിന്റെ പേര്", pl_chat: "ലക്ഷണങ്ങൾ ടൈപ്പ് ചെയ്യുക...", no_family: "കുടുംബാംഗങ്ങളെ ചേർത്തിട്ടില്ല.", active_scheme: "സജീവ പദ്ധതി",
+            alert_fill_details: "പേരും ബന്ധവും നൽകുക.", alert_scan_upload: "സ്കാൻ അപ്‌ലോഡ് ചെയ്തു!", alert_sos_cancel: "SOS റദ്ദാക്കി.", alert_med_details: "മരുന്നിന്റെ പേരും സമയവും നൽകുക.", alert_select_symp: "ഒരു ലക്ഷണമെങ്കിലും തിരഞ്ഞെടുക്കുക.", alert_emergency: "അടിയന്തര മുന്നറിയിപ്പ്: ഉടൻ ആശുപത്രിയിൽ പോകുക.", call_driver: "ഡ്രൈവറെ വിളിക്കുക", view_map: "എന്റെ സ്ഥാനം", search_all: "ആശുപത്രികൾ തിരയുക",
+            analyzing: "വിശകലനം നടത്തുന്നു...", analysis_label: "വിശകലനം", prescription_label: "കുറിപ്പടി",
+            ai_critical: "ഹൃദയസംബന്ധമായ അല്ലെങ്കിൽ ശ്വാസകോശ പ്രശ്നം.", ai_crit_aid: "വിശ്രമിക്കുക.", ai_crit_presc: "ഉടൻ ആശുപത്രിയിൽ പോകുക.",
+            ai_fever: "വൈറൽ പനി ആകാൻ സാധ്യതയുണ്ട്.", ai_fever_aid: "വിശ്രമിക്കുക, ചൂടുവെള്ളം കുടിക്കുക.", ai_fever_presc: "പാരസെറ്റമോൾ 500mg കഴിക്കുക.",
+            ai_stomach: "ഗ്യാസ്ട്രിക് പ്രശ്നം അല്ലെങ്കിൽ ഭക്ഷ്യവിഷബാധ.", ai_stom_aid: "എരിവുള്ള ഭക്ഷണം ഒഴിവാക്കുക.", ai_stom_presc: "ORS കുടിക്കുക.",
+            ai_headache: "തലവേദന അല്ലെങ്കിൽ നിർജ്ജലീകരണം.", ai_head_aid: "ഫോൺ നോക്കുന്നത് കുറയ്ക്കുക.", ai_head_presc: "ധാരാളം വെള്ളം കുടിച്ച് വിശ്രമിക്കുക.",
+            ai_unknown: "കൂടുതൽ വിവരങ്ങൾ നൽകുക.", ai_explain_alert: "റിപ്പോർട്ട് സാധാരണ നിലയിലാണ്. ഡോക്ടറെ സമീപിക്കുക."
+        },
+        kn: {
+            welcome: "ನಮಸ್ಕಾರ", ai_doc: "AI ವೈದ್ಯರ ಚಾಟ್", select_symp: "ಲಕ್ಷಣಗಳು", hospitals: "ಆಸ್ಪತ್ರೆಗಳು", detect_loc: "ನನ್ನ ಸ್ಥಳ",
+            nav_home: "ಮುಖಪುಟ", nav_consult: "ಸಮಾಲೋಚನೆ", nav_check: "ಪರಿಶೀಲಿಸಿ", nav_map: "ನಕ್ಷೆ",
+            nav_meds: "ಔಷಧಿ ಜ್ಞಾಪನೆ", add_med: "ಔಷಧಿ ಸೇರಿಸಿ", your_meds: "ವೇಳಾಪಟ್ಟಿ", freq_daily: "ದೈನಂದಿನ", freq_weekly: "ಸಾಪ್ತಾಹಿಕ", freq_needed: "ಅಗತ್ಯವಿದ್ದಾಗ", no_meds: "ಯಾವುದೇ ಔಷಧಿಗಳಿಲ್ಲ.", med_desc: "ನಿಮ್ಮ ಔಷಧಿಯನ್ನು ಮರೆಯಬೇಡಿ.", 
+            sos: "ತುರ್ತು SOS", sos_desc: "ಆಂಬ್ಯುಲೆನ್ಸ್ ಕಳುಹಿಸಿ", est_cost: "ಅಂದಾಜು ವೆಚ್ಚ:", risk_analysis: "ಅಪಾಯ ವಿಶ್ಲೇಷಣೆ", predicted_disease: "ಕಾಯಿಲೆ:", risk_category: "ವರ್ಗ:", suggested_doctor: "ವೈದ್ಯರು:", find_dr_hospital: "ಹತ್ತಿರದ ವೈದ್ಯರನ್ನು ಹುಡುಕಿ",
+            cat_general: "ಸಾಮಾನ್ಯ ಲಕ್ಷಣಗಳು", cat_respiratory: "ತಲೆ, ಕುತ್ತಿಗೆ ಮತ್ತು ಉಸಿರಾಟ", cat_cardio: "ಎದೆ ಮತ್ತು ಹೃದಯ", cat_digestive: "ಜೀರ್ಣಕಾರಿ ಮತ್ತು ಹೊಟ್ಟೆ", cat_neuro: "ಸ್ನಾಯು, ಚರ್ಮ ಮತ್ತು ನರವೈಜ್ಞಾನಿಕ",
+            symp_fever: "ಜ್ವರ", symp_chills: "ಚಳಿ", symp_fatigue: "ಆಯಾಸ", symp_dizziness: "ತಲೆತಿರುಗುವಿಕೆ", symp_sweating: "ಬೆವರುವುದು", symp_weight_loss: "ತೂಕ ಇಳಿಕೆ", symp_weakness: "ದೌರ್ಬಲ್ಯ",
+            symp_headache: "ತಲೆನೋವು", symp_cough: "ಕೆಮ್ಮು", symp_sore_throat: "ಗಂಟಲು ನೋವು", symp_runny_nose: "ಮೂಗು ಸೋರುವಿಕೆ", symp_breath: "ಉಸಿರಾಟದ ತೊಂದರೆ", symp_wheezing: "ಉಬ್ಬಸ", symp_earache: "ಕಿವಿ ನೋವು", symp_vision: "ದೃಷ್ಟಿ ಬದಲಾವಣೆಗಳು",
+            symp_chest: "ಎದೆ ನೋವು", symp_palpitation: "ಹೃದಯ ಬಡಿತ",
+            symp_nausea: "ವಾಕರಿಕೆ/ವಾಂತಿ", symp_stomach_ache: "ಹೊಟ್ಟೆ ನೋವು", symp_diarrhea: "ಅತಿಸಾರ", symp_constipation: "ಮಲಬದ್ಧತೆ", symp_appetite_loss: "ಹಸಿವಿನ ನಷ್ಟ",
+            symp_joint_pain: "ಸ್ನಾಯು/ಕೀಲು ನೋವು", symp_rash: "ಚರ್ಮದ ದದ್ದು", symp_swelling: "ಊತ", symp_numbness: "ಮರಗಟ್ಟುವಿಕೆ", symp_confusion: "ಗೊಂದಲ", symp_anxiety: "ಆತಂಕ",
+            chat_welcome: "ನಮಸ್ಕಾರ {name}! ನಾನು ನಿಮ್ಮ AI ವೈದ್ಯ. ರೋಗಲಕ್ಷಣಗಳನ್ನು ವಿವರಿಸಿ.", ai_assist: "AI ಚಾಟ್",
+            scan: "ಸ್ಕ್ಯಾನ್ ವರದಿ", scan_desc: "ಸ್ಕ್ಯಾನ್ ವರದಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ.", upload_scan: "ಸ್ಕ್ಯಾನ್ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ", past_scans: "ವರದಿಗಳು", ai_explain: "AI ವಿವರಣೆ",
+            doc_reply: "ನಮಸ್ಕಾರ, ದಯವಿಟ್ಟು ಸ್ಕ್ಯಾನ್ ವರದಿಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ ಅಥವಾ ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ.",
+            qr_uploaded: "ನಾನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ್ದೇನೆ", qr_book: "ಅಪಾಯಿಂಟ್ಮೆಂಟ್ ಬುಕ್ ಮಾಡಿ", doc_thanks: "ಧನ್ಯವಾದಗಳು. ನಾನು ಪರಿಶೀಲಿಸುತ್ತೇನೆ.",
+            family_title: "ಕುಟುಂಬದ ಪ್ರೊಫೈಲ್‌ಗಳು", family_desc: "ಕುಟುಂಬದ ಸದಸ್ಯರನ್ನು ಸೇರಿಸಿ.", add_member: "ಸದಸ್ಯರನ್ನು ಸೇರಿಸಿ", saved_members: "ಉಳಿಸಿದ ಸದಸ್ಯರು",
+            sos_tracking_title: "SOS ಟ್ರ್ಯಾಕಿಂಗ್", amb_dispatched: "ಆಂಬ್ಯುಲೆನ್ಸ್ ಕಳುಹಿಸಲಾಗಿದೆ!", eta: "ಸಮಯ: 5 ನಿಮಿಷಗಳು", cancel_sos: "ರದ್ದುಮಾಡಿ", insurance_title: "ವಿಮಾ ಯೋಜನೆಗಳು:",
+            insurance_schemes: "ವಿಮಾ ಯೋಜನೆಗಳು", insurance_desc: "ಆರೋಗ್ಯ ರಕ್ಷಣೆಯನ್ನು ವೀಕ್ಷಿಸಿ", insurance_desc_full: "ಆರೋಗ್ಯ ವಿಮಾ ಯೋಜನೆಗಳನ್ನು ಅನ್ವೇಷಿಸಿ.",
+            first_aid: "ಪ್ರಥಮ ಚಿಕಿತ್ಸೆ:", hospital_desc: "ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗಳನ್ನು ಹುಡುಕಿ.",
+            sign_in: "ಉಳಿಸಿ", secure_login: "ಪ್ರೊಫೈಲ್", login_desc: "ನಿಮ್ಮ AI ಪ್ರೊಫೈಲ್ ರಚಿಸಿ.", send_otp: "OTP ಕಳುಹಿಸಿ", cont_google: "Google ನೊಂದಿಗೆ ಮುಂದುವರಿಯಿರಿ",
+            pl_name: "ಹೆಸರು", pl_rel: "ಸಂಬಂಧ", pl_blood: "ರಕ್ತ", pl_age: "ವಯಸ್ಸು", pl_gender: "ಲಿಂಗ", opt_male:"ಪುರುಷ", opt_female:"ಮಹಿಳೆ", opt_other:"ಇತರ", pl_weight: "ತೂಕ", pl_height: "ಎತ್ತರ", pl_med: "ಔಷಧಿ", pl_chat: "ಲಕ್ಷಣಗಳನ್ನು ಟೈಪ್ ಮಾಡಿ...", no_family: "ಯಾವುದೇ ಸದಸ್ಯರಿಲ್ಲ.", active_scheme: "ಸಕ್ರಿಯ ಯೋಜನೆ",
+            alert_fill_details: "ಹೆಸರು ಮತ್ತು ಸಂಬಂಧವನ್ನು ಭರ್ತಿ ಮಾಡಿ.", alert_scan_upload: "ಸ್ಕ್ಯಾನ್ ಅಪ್‌ಲೋಡ್ ಆಗಿದೆ!", alert_sos_cancel: "SOS ರದ್ದುಗೊಳಿಸಲಾಗಿದೆ.", alert_med_details: "ದಯವಿಟ್ಟು ಔಷಧಿಯ ಹೆಸರು ನಮೂದಿಸಿ.", alert_select_symp: "ಒಂದು ರೋಗಲಕ್ಷಣವನ್ನು ಆಯ್ಕೆಮಾಡಿ.", alert_emergency: "ತುರ್ತು ಎಚ್ಚರಿಕೆ: ತಕ್ಷಣ ಆಸ್ಪತ್ರೆಗೆ ಭೇಟಿ ನೀಡಿ.", call_driver: "ಡ್ರೈವರ್‌ಗೆ ಕರೆ ಮಾಡಿ", view_map: "ನನ್ನ ಸ್ಥಳ ವೀಕ್ಷಿಸಿ", search_all: "ಆಸ್ಪತ್ರೆಗಳನ್ನು ಹುಡುಕಿ",
+            analyzing: "ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ...", analysis_label: "ವಿಶ್ಲೇಷಣೆ", prescription_label: "ಪ್ರಿಸ್ಕ್ರಿಪ್ಷನ್",
+            ai_critical: "ಹೃದಯ ಅಥವಾ ಉಸಿರಾಟದ ಸಮಸ್ಯೆ ಇರಬಹುದು.", ai_crit_aid: "ಶಾಂತವಾಗಿ ಕುಳಿತುಕೊಳ್ಳಿ.", ai_crit_presc: "ತಕ್ಷಣ ಆಸ್ಪತ್ರೆಗೆ ಭೇಟಿ ನೀಡಿ.",
+            ai_fever: "ವೈರಲ್ ಜ್ವರದ ಲಕ್ಷಣಗಳು.", ai_fever_aid: "ಬಿಸಿ ನೀರು ಕುಡಿಯಿರಿ.", ai_fever_presc: "ಪ್ಯಾರಾಸಿಟಮಾಲ್ 500mg ತೆಗೆದುಕೊಳ್ಳಿ.",
+            ai_stomach: "ಗ್ಯಾಸ್ಟ್ರಿಕ್ ಸಮಸ್ಯೆ ಇರಬಹುದು.", ai_stom_aid: "ಮಸಾಲೆಯುಕ್ತ ಆಹಾರವನ್ನು ತಪ್ಪಿಸಿ.", ai_stom_presc: "ORS ಕುಡಿಯಿರಿ.",
+            ai_headache: "ತಲೆನೋವು ಅಥವಾ ನಿರ್ಜಲೀಕರಣ.", ai_head_aid: "ಕಣ್ಣುಗಳಿಗೆ ವಿಶ್ರಾಂತಿ ನೀಡಿ.", ai_head_presc: "ನೀರು ಕುಡಿದು ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ.",
+            ai_unknown: "ಹೆಚ್ಚಿನ ವಿವರಗಳ ಅಗತ್ಯವಿದೆ.", ai_explain_alert: "ವರದಿ ಸಾಮಾನ್ಯವಾಗಿದೆ. ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ."
+        }
+    };
+    
+    function changeLanguage(lang) {
+        currentLanguage = lang;
+        document.querySelectorAll('.lang-selector').forEach(sel => sel.value = lang);
+        document.querySelectorAll("[data-i18n]").forEach(el => {
+            const key = el.getAttribute("data-i18n");
+            if (translations[lang] && translations[lang][key]) el.innerHTML = translations[lang][key];
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+            const key = el.getAttribute("data-i18n-placeholder");
+            if (translations[lang] && translations[lang][key]) el.placeholder = translations[lang][key];
+        });
+        
+        // Re-render dynamic lists to apply new language
+        renderFamily();
+        renderScans();
+        renderMedicines();
+        renderInsurance();
+        
+        // Update welcome tags dynamically
+        if(userBio.name) {
+            const helloTxt = translations[lang].welcome.split(" ")[0];
+            document.getElementById('welcomeName').innerText = `${helloTxt} ${userBio.name} 👋`;
+            document.getElementById('chatWelcomeTxt').innerText = translations[lang].chat_welcome.replace("{name}", userBio.name);
+        }
+    }
+</script>
+
+</body>
+</html>
